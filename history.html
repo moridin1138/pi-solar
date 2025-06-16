@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BMS Data Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom styles for button active state */
+        .interval-btn.active {
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-7xl mx-auto bg-white p-6 rounded-lg shadow-xl">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">BMS Data Dashboard</h1>
+
+        <!-- Time Interval Selection -->
+        <div class="flex flex-wrap justify-center gap-3 mb-8">
+            <button class="interval-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-200 active" data-interval="24_hours">24 Hours</button>
+            <button class="interval-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-200" data-interval="7_days">7 Days</button>
+            <button class="interval-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-200" data-interval="30_days">30 Days</button>
+            <button class="interval-btn bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-2 px-4 rounded-lg shadow-sm transition duration-200" data-interval="6_months">6 Months</button>
+        </div>
+
+        <!-- Charts Container -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- PowerQueen SOC Chart -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">PowerQueen SOC (%)</h2>
+                <canvas id="powerqueenSocChart"></canvas>
+            </div>
+
+            <!-- PowerQueen Remaining Capacity Chart -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">PowerQueen Remaining Capacity (Ah)</h2>
+                <canvas id="powerqueenRemainingCapacityChart"></canvas>
+            </div>
+
+            <!-- Renogy PV Power Chart -->
+            <div class="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4 text-center">Renogy PV Power (W)</h2>
+                <canvas id="renogyPvPowerChart"></canvas>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Simulated Data (replace with actual data fetched from your SQLite DB via a backend API)
+        // In a real application, you'd fetch this data from a server endpoint,
+        // for example, /api/powerqueen/soc?interval=24_hours
+        const simulatedData = {
+            "powerqueen_soc": {
+                "24_hours": Array.from({ length: 24 }, (_, i) => ({ timestamp: new Date(Date.now() - (24 - i) * 3600 * 1000).toISOString(), value: Math.random() * (100 - 80) + 80 })),
+                "7_days": Array.from({ length: 7 * 4 }, (_, i) => ({ timestamp: new Date(Date.now() - (7 * 24 * 3600 - i * 6 * 3600) * 1000).toISOString(), value: Math.random() * (95 - 60) + 60 })),
+                "30_days": Array.from({ length: 30 * 2 }, (_, i) => ({ timestamp: new Date(Date.now() - (30 * 24 * 3600 - i * 12 * 3600) * 1000).toISOString(), value: Math.random() * (90 - 40) + 40 })),
+                "6_months": Array.from({ length: 6 * 4 }, (_, i) => ({ timestamp: new Date(Date.now() - (6 * 30 * 24 * 3600 - i * 7 * 24 * 3600) * 1000).toISOString(), value: Math.random() * (85 - 20) + 20 })),
+            },
+            "powerqueen_remaining_capacity": {
+                "24_hours": Array.from({ length: 24 }, (_, i) => ({ timestamp: new Date(Date.now() - (24 - i) * 3600 * 1000).toISOString(), value: Math.random() * (95 - 75) + 75 })),
+                "7_days": Array.from({ length: 7 * 4 }, (_, i) => ({ timestamp: new Date(Date.now() - (7 * 24 * 3600 - i * 6 * 3600) * 1000).toISOString(), value: Math.random() * (90 - 50) + 50 })),
+                "30_days": Array.from({ length: 30 * 2 }, (_, i) => ({ timestamp: new Date(Date.now() - (30 * 24 * 3600 - i * 12 * 3600) * 1000).toISOString(), value: Math.random() * (85 - 30) + 30 })),
+                "6_months": Array.from({ length: 6 * 4 }, (_, i) => ({ timestamp: new Date(Date.now() - (6 * 30 * 24 * 3600 - i * 7 * 24 * 3600) * 1000).toISOString(), value: Math.random() * (80 - 10) + 10 })),
+            },
+            "renogy_pv_power": {
+                "24_hours": Array.from({ length: 24 }, (_, i) => ({ timestamp: new Date(Date.now() - (24 - i) * 3600 * 1000).toISOString(), value: Math.random() * 500 })),
+                "7_days": Array.from({ length: 7 * 4 }, (_, i) => ({ timestamp: new Date(Date.now() - (7 * 24 * 3600 - i * 6 * 3600) * 1000).toISOString(), value: Math.random() * 450 })),
+                "30_days": Array.from({ length: 30 * 2 }, (_, i) => ({ timestamp: new Date(Date.now() - (30 * 24 * 3600 - i * 12 * 3600) * 1000).toISOString(), value: Math.random() * 400 })),
+                "6_months": Array.from({ length: 6 * 4 }, (_, i) => ({ timestamp: new Date(Date.now() - (6 * 30 * 24 * 3600 - i * 7 * 24 * 3600) * 1000).toISOString(), value: Math.random() * 300 })),
+            }
+        };
+
+        let currentInterval = '24_hours'; // Default interval
+
+        const chartInstances = {}; // Store Chart.js instances
+
+        /**
+         * Renders or updates a Chart.js line graph.
+         * @param {string} chartId The ID of the canvas element.
+         * @param {string} label The dataset label.
+         * @param {string} unit The unit for the Y-axis.
+         * @param {Array} data The data array for the chart [{ timestamp, value }].
+         * @param {string} borderColor The color of the line.
+         */
+        function renderChart(chartId, label, unit, data, borderColor) {
+            const ctx = document.getElementById(chartId).getContext('2d');
+
+            // Destroy existing chart instance if it exists
+            if (chartInstances[chartId]) {
+                chartInstances[chartId].destroy();
+            }
+
+            // Extract labels (timestamps) and values from data
+            const labels = data.map(d => {
+                const date = new Date(d.timestamp);
+                if (currentInterval === '24_hours') {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } else if (currentInterval === '7_days') {
+                    return date.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit' });
+                } else {
+                    return date.toLocaleDateString([], { month: 'short', day: 'numeric', year: '2-digit' });
+                }
+            });
+            const values = data.map(d => d.value);
+
+            chartInstances[chartId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: label,
+                        data: values,
+                        borderColor: borderColor,
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.1, // Smoothes the line
+                        pointRadius: 2, // Smaller points for cleaner look
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Allows flexible sizing with parent container
+                    scales: {
+                        x: {
+                            grid: {
+                                display: false // Hide x-axis grid lines
+                            },
+                            title: {
+                                display: true,
+                                text: 'Time'
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: unit
+                            },
+                            grid: {
+                                color: '#e0e0e0' // Light gray y-axis grid lines
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                }
+            });
+        }
+
+        /**
+         * Updates all charts based on the selected interval.
+         * @param {string} interval The selected time interval.
+         */
+        function updateAllCharts(interval) {
+            currentInterval = interval; // Update global interval
+
+            renderChart(
+                'powerqueenSocChart',
+                'SOC', '%',
+                simulatedData.powerqueen_soc[interval],
+                '#3b82f6' // Blue
+            );
+
+            renderChart(
+                'powerqueenRemainingCapacityChart',
+                'Remaining Capacity', 'Ah',
+                simulatedData.powerqueen_remaining_capacity[interval],
+                '#ef4444' // Red
+            );
+
+            renderChart(
+                'renogyPvPowerChart',
+                'PV Power', 'W',
+                simulatedData.renogy_pv_power[interval],
+                '#22c55e' // Green
+            );
+        }
+
+        // Event Listeners for Interval Buttons
+        document.addEventListener('DOMContentLoaded', () => {
+            const intervalButtons = document.querySelectorAll('.interval-btn');
+            intervalButtons.forEach(button => {
+                button.addEventListener('click', (event) => {
+                    // Remove active class from all buttons
+                    intervalButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to the clicked button
+                    event.target.classList.add('active');
+
+                    const interval = event.target.dataset.interval;
+                    updateAllCharts(interval);
+                });
+            });
+
+            // Initial chart rendering with default interval
+            updateAllCharts(currentInterval);
+        });
+    </script>
+</body>
+</html>
