@@ -50,52 +50,60 @@ This project provides a solution for monitoring PowerQueen and Renogy LiFePO4 ba
 * Web Browser: A modern web browser (e.g., Chrome, Firefox, Edge) to view the dashboard.
 
 ## Project Structure
-.
+```
 ├── bms_data_logger.py      # Python script for polling and logging data
 ├── dashboard.html          # Web dashboard UI
 ├── bms_data.db             # SQLite database (will be created automatically)
 └── README.md               # This file
-
+```
 ## Setup & Installation
 Follow these steps to get your BMS data logger and dashboard running on your Raspberry Pi.
 
 ### 1. Clone the Repository
 First, clone this GitHub repository to your Raspberry Pi:
+```
 git clone https://github.com/your-username/your-repo-name.git  # Replace with your actual repo URL
 cd your-repo-name
-
+```
 ### 2. System Bluetooth Setup (Raspberry Pi / Linux)
 Ensure your Raspberry Pi's Bluetooth is correctly configured and your user has the necessary permissions.
+```
 sudo apt update
 sudo apt install bluetooth bluez libbluetooth-dev python3-dev
 sudo systemctl enable bluetooth
 sudo systemctl start bluetooth
 sudo usermod -a -G bluetooth $USER # Add your current user to the bluetooth group
 sudo reboot # Reboot for group changes to take effect
+```
 
 Important: After rebooting, log in again. Bluetooth devices usually only allow one active connection. Make sure no other apps (like official PowerQueen or Renogy mobile apps) are connected to your BMS devices when running the script.
 
 ### 3. Python Environment Setup
 It's highly recommended to use a Python virtual environment to manage dependencies.
+```
 python3 -m venv venv
 source venv/bin/activate # On Linux/macOS
 # For Windows, use: .\venv\Scripts\activate
+```
 
 pip install --upgrade pip
 pip install bleak pq-bms-bluetooth renogybt
 
 ### 4. Configure the Data Logger Script
 Open bms_data_logger.py in your favorite text editor (e.g., nano bms_data_logger.py) and modify the configuration section:
+```
 # --- Configuration ---
 # IMPORTANT: Replace these with the actual MAC addresses of your devices.
 # You can typically find these using tools like 'bluetoothctl' on Linux or
 # by checking the official apps for your devices.
+
 POWERQUEEN_MAC_ADDRESS = "XX:XX:XX:XX:XX:XX"  # e.g., "00:1A:7D:DA:71:03"
 RENOGY_MAC_ADDRESS = "YY:YY:YY:YY:YY:YY"      # e.g., "A1:B2:C3:D4:E5:F6"
 RENOGY_DEVICE_ID = 255                        # Default broadcast ID, or specific device ID if known (e.g., 1 for Rover)
 
 DB_NAME = "bms_data.db"
 POLLING_INTERVAL_SECONDS = 300 # 5 minutes
+```
 * POWERQUEEN_MAC_ADDRESS: Replace "XX:XX:XX:XX:XX:XX" with the Bluetooth MAC address of your PowerQueen BMS.
 * RENOGY_MAC_ADDRESS: Replace "YY:YY:YY:YY:YY:YY" with the Bluetooth MAC address of your Renogy BT module.
 * RENOGY_DEVICE_ID: For Renogy, 255 often works as a broadcast ID. If you have multiple Renogy devices connected via a BT-2 Communication Hub, you might need to find their individual device IDs (refer to renogybt library documentation or issues for guidance).
@@ -109,14 +117,18 @@ To find MAC addresses on Linux:
 
 ### 5. Run the Data Logger
 After configuring the script, you can run it:
+```
 source venv/bin/activate
 python3 bms_data_logger.py
+```
 
 The script will start polling and logging data to bms_data.db. You should see log messages in your terminal.
 
 To run in the background (recommended for continuous logging):
 For a simple background process (will stop if the terminal closes):
+```
 source venv/bin/activate && nohup python3 bms_data_logger.py &
+```
 
 To stop it, you'll need to find its process ID (ps aux | grep bms_data_logger.py) and then kill <PID>.
 
@@ -127,10 +139,12 @@ The dashboard.html file provides the front-end UI. For it to display real data f
 
 Option A: Simple Local Server (for testing/development - uses simulated data)
 You can open dashboard.html directly in your browser. It will use its internal simulated data for demonstration purposes, showing you the dashboard functionality, movable widgets, and persistent layout.
-# From your project directory
+From your project directory
+```
 open dashboard.html # On macOS
 xdg-open dashboard.html # On Linux
 start dashboard.html # On Windows
+```
 
 Option B: Backend API (Recommended for real data)
 To connect dashboard.html to your bms_data.db, you'll need to implement a small web server (e.g., using Python's Flask or FastAPI) that:
@@ -139,6 +153,7 @@ To connect dashboard.html to your bms_data.db, you'll need to implement a small 
 3. Serves dashboard.html itself.
 
 Here's a conceptual example of how a Flask app might look (this is not included in the repository and needs to be built separately):
+```
 # app.py (Example Flask backend - NOT part of this repo)
 from flask import Flask, jsonify, send_file, request
 import sqlite3
@@ -175,6 +190,7 @@ def get_powerqueen_soc():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
+```
 You would then run this Flask app (e.g., python app.py), and access the dashboard via http://<Your_Pi_IP_Address>:5000.
 
 ## Database Structure
