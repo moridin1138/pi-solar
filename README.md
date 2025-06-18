@@ -84,10 +84,9 @@ It's highly recommended to use a Python virtual environment to manage dependenci
 python3 -m venv venv
 source venv/bin/activate # On Linux/macOS
 # For Windows, use: .\venv\Scripts\activate
-```
-
 pip install --upgrade pip
 pip install bleak pq-bms-bluetooth renogybt
+```
 
 ### 4. Configure the Data Logger Script
 Open bms_data_logger.py in your favorite text editor (e.g., nano bms_data_logger.py) and modify the configuration section:
@@ -111,9 +110,9 @@ POLLING_INTERVAL_SECONDS = 300 # 5 minutes
 
 To find MAC addresses on Linux:
 1. Run bluetoothctl.
-2. Type agent on and then scan on.
+2. Type ```agent on``` and then ```scan on`.
 3. Look for devices that appear in the list (you might need to enable pairing/discovery on your BMS if it has that option). Note down the MAC address (e.g., 00:1A:7D:DA:71:03).
-4. Type scan off and then quit.
+4. Type ```scan off``` and then ```quit```.
 
 ### 5. Run the Data Logger
 After configuring the script, you can run it:
@@ -130,7 +129,7 @@ For a simple background process (will stop if the terminal closes):
 source venv/bin/activate && nohup python3 bms_data_logger.py &
 ```
 
-To stop it, you'll need to find its process ID (ps aux | grep bms_data_logger.py) and then kill <PID>.
+To stop it, you'll need to find its process ID (```ps aux | grep bms_data_logger.py```) and then kill <PID>.
 
 For a more robust solution, especially for a Raspberry Pi that runs 24/7, consider setting it up as a systemd service. This ensures it starts on boot and restarts if it crashes. (Detailed systemd setup is beyond this README, but many online guides are available for Python scripts.)
 
