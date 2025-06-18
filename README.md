@@ -85,7 +85,12 @@ python3 -m venv venv
 source venv/bin/activate # On Linux/macOS
 # For Windows, use: .\venv\Scripts\activate
 pip install --upgrade pip
-pip install bleak pq-bms-bluetooth renogybt
+pip install bleak
+```
+
+You will need to install the pq-bms-bluetooth and renogybt libraries using git.  After cloning the repositories you can use the following commands in their directories:
+```
+python3 -m pip install -r requirements.txt
 ```
 
 ### 4. Configure the Data Logger Script
