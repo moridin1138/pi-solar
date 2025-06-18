@@ -110,8 +110,8 @@ POLLING_INTERVAL_SECONDS = 300 # 5 minutes
 
 To find MAC addresses on Linux:
 1. Run bluetoothctl.
-2. Type ```agent on``` and then ```scan on`.
-3. Look for devices that appear in the list (you might need to enable pairing/discovery on your BMS if it has that option). Note down the MAC address (e.g., 00:1A:7D:DA:71:03).
+2. Type ```agent on``` and then ```scan on```.
+3. Look for devices that appear in the list (you might need to enable pairing/discovery on your BMS if it has that option). Note down the MAC address (e.g., 00:1A:7D:X0:71:03).
 4. Type ```scan off``` and then ```quit```.
 
 ### 5. Run the Data Logger
